@@ -1,9 +1,10 @@
 locals {
-  is_mssql = "${element(split("-",var.engine), 0) == "sqlserver"}"
+  is_mssql  = "${element(split("-",var.engine), 0) == "sqlserver"}"
+  is_aurora = "${element(split("-",var.engine), 0) == "aurora"}"
 }
 
 resource "aws_iam_role" "enhanced_monitoring" {
-  count = "${var.create_monitoring_role ? 1 : 0}"
+  count = "${var.create_monitoring_role  && ! local.is_aurora ? 1 : 0}"
 
   name               = "${var.monitoring_role_name}"
   assume_role_policy = "${file("${path.module}/policy/enhancedmonitoring.json")}"
@@ -11,14 +12,14 @@ resource "aws_iam_role" "enhanced_monitoring" {
 }
 
 resource "aws_iam_role_policy_attachment" "enhanced_monitoring" {
-  count = "${var.create_monitoring_role ? 1 : 0}"
+  count = "${var.create_monitoring_role  && ! local.is_aurora ? 1 : 0}"
 
   role       = "${aws_iam_role.enhanced_monitoring.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 }
 
 resource "aws_db_instance" "this" {
-  count = "${var.create && !local.is_mssql ? 1 : 0}"
+  count = "${var.create && !local.is_mssql  && ! local.is_aurora ? 1 : 0}"
 
   identifier = "${var.identifier}"
 
@@ -76,7 +77,7 @@ resource "aws_db_instance" "this" {
 }
 
 resource "aws_db_instance" "this_mssql" {
-  count = "${var.create && local.is_mssql ? 1 : 0}"
+  count = "${var.create && local.is_mssql  && ! local.is_aurora ? 1 : 0}"
 
   identifier = "${var.identifier}"
 

@@ -41,3 +41,7 @@ variable "use_name_prefix" {
   description = "Whether to use name_prefix or not"
   default     = true
 }
+
+variable "engine" {
+  description = "the engine in use"
+}

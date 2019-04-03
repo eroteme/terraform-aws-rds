@@ -3,6 +3,11 @@ output "this_db_instance_address" {
   value       = "${module.db_instance.this_db_instance_address}"
 }
 
+output "this_rds_cluster_endpoint" {
+  description = "The endpoint of the RDS cluster"
+  value       = "${module.rds_cluster.this_rds_cluster_endpoint}"
+}
+
 output "this_db_instance_arn" {
   description = "The ARN of the RDS instance"
   value       = "${module.db_instance.this_db_instance_arn}"

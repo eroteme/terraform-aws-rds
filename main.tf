@@ -5,6 +5,9 @@ locals {
   parameter_group_name    = "${coalesce(var.parameter_group_name, var.identifier)}"
   parameter_group_name_id = "${coalesce(var.parameter_group_name, module.db_parameter_group.this_db_parameter_group_id)}"
 
+  cluster_parameter_group_name    = "${coalesce(var.parameter_group_name, var.identifier)}"
+  cluster_parameter_group_name_id = "${coalesce(var.parameter_group_name, module.db_parameter_group.this_cluster_parameter_group_id)}"
+
   option_group_name             = "${coalesce(var.option_group_name, module.db_option_group.this_db_option_group_id)}"
   enable_create_db_option_group = "${var.option_group_name == "" && var.engine != "postgres" ? var.create_db_option_group : 0}"
 }
@@ -30,6 +33,7 @@ module "db_parameter_group" {
   name_prefix     = "${var.identifier}-"
   use_name_prefix = "${var.use_parameter_group_name_prefix}"
   family          = "${var.family}"
+  engine          = "${var.engine}"
 
   parameters = ["${var.parameters}"]
 
@@ -95,6 +99,61 @@ module "db_instance" {
 
   backup_retention_period = "${var.backup_retention_period}"
   backup_window           = "${var.backup_window}"
+
+  monitoring_interval    = "${var.monitoring_interval}"
+  monitoring_role_arn    = "${var.monitoring_role_arn}"
+  monitoring_role_name   = "${var.monitoring_role_name}"
+  create_monitoring_role = "${var.create_monitoring_role}"
+
+  timezone                        = "${var.timezone}"
+  character_set_name              = "${var.character_set_name}"
+  enabled_cloudwatch_logs_exports = "${var.enabled_cloudwatch_logs_exports}"
+
+  timeouts = "${var.timeouts}"
+
+  deletion_protection = "${var.deletion_protection}"
+
+  tags = "${var.tags}"
+}
+
+module "rds_cluster" {
+  source = "./modules/rds_cluster"
+
+  create            = "${var.create_db_instance}"
+  identifier        = "${var.identifier}"
+  engine            = "${var.engine}"
+  engine_version    = "${var.engine_version}"
+  instance_class    = "${var.instance_class}"
+  storage_encrypted = "${var.storage_encrypted}"
+  kms_key_id        = "${var.kms_key_id}"
+
+  database_name                       = "${var.name}"
+  master_username                     = "${var.username}"
+  master_password                     = "${var.password}"
+  port                                = "${var.port}"
+  iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
+
+  snapshot_identifier           = "${var.snapshot_identifier}"
+  replication_source_identifier = "${var.replication_source_identifier}"
+
+  vpc_security_group_ids          = ["${var.vpc_security_group_ids}"]
+  db_subnet_group_name            = "${local.db_subnet_group_name}"
+  db_cluster_parameter_group_name = "${local.cluster_parameter_group_name_id}"
+  option_group_name               = "${local.option_group_name}"
+
+  availability_zone   = "${var.availability_zone}"
+  publicly_accessible = "${var.publicly_accessible}"
+
+  allow_major_version_upgrade  = "${var.allow_major_version_upgrade}"
+  auto_minor_version_upgrade   = "${var.auto_minor_version_upgrade}"
+  apply_immediately            = "${var.apply_immediately}"
+  preferred_maintenance_window = "${var.maintenance_window}"
+  skip_final_snapshot          = "${var.skip_final_snapshot}"
+  copy_tags_to_snapshot        = "${var.copy_tags_to_snapshot}"
+  final_snapshot_identifier    = "${var.final_snapshot_identifier}"
+
+  backup_retention_period = "${var.backup_retention_period}"
+  preferred_backup_window = "${var.backup_window}"
 
   monitoring_interval    = "${var.monitoring_interval}"
   monitoring_role_arn    = "${var.monitoring_role_arn}"
